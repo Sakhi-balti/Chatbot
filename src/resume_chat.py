@@ -36,24 +36,28 @@ if 'message_history' not in st.session_state:
 if 'thread_id' not in st.session_state:
     st.session_state['thread_id'] = generate_thread_id()
 
-# store the thread_id in list
-if 'chat_thread_id' not in st.session_state:
-    st.session_state['chat_thread_id'] = []
+if 'chat_threads' not in st.session_state:
+    st.session_state['chat_threads'] = []
+
 add_thread(st.session_state['thread_id'])
 
 # *********************************** Sidebar Section *******************************************
 st.sidebar.title('🤖 S.H_Chatbot')
+
 if st.sidebar.button('➕ New Chat', use_container_width=True):
     reset_chat()
+
 st.sidebar.divider()
 st.sidebar.header('Recent Conversations')
-for thread_id in st.session_state['chat_thread_id'][::-1]:
+
+for thread_id in st.session_state['chat_threads'][::-1]:
     if st.sidebar.button(str(thread_id)):
         st.session_state['thread_id'] = thread_id
         st.session_state['message_history'] = load_conversation(thread_id)
-        
+
 #******************************************* Main UI *****************************************
 st.title('Chat Assistant')
+
 for message in st.session_state['message_history']:
     with st.chat_message(message['role']):
         st.write(message['content'])
