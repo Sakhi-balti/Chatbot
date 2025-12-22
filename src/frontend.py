@@ -2,9 +2,11 @@ import streamlit as st
 from backend import graph 
 from langchain_core.messages import HumanMessage
 
-# Initialize session state for message history
+# *********************************Session Setup***************************************
 if 'message_history' not in st.session_state:
     st.session_state['message_history'] = []
+
+
 
 # Display existing chat history
 for message in st.session_state['message_history']:
