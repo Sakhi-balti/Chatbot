@@ -13,6 +13,7 @@ import os
 
 load_dotenv()
 HF_KEY = os.getenv('HF_KEY')
+os.environ['LANGCHAIN_PROJECT']='Personal_Chatbot'
 
 # Initialize LLM
 llm = ChatOpenAI(
