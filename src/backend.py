@@ -1,15 +1,16 @@
-from importlib import metadata
 from langgraph.graph import StateGraph, START, END
 from typing import TypedDict, Annotated
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from langchain_openai import ChatOpenAI
-from langgraph.checkpoint.memory import MemorySaver
+from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.graph.message import add_messages
 from dotenv import load_dotenv
+import sqlite3
 import os
 
 load_dotenv()
 HF_KEY = os.getenv('HF_KEY')
+os.environ['LANGCHAIN_PROJECT']='Personal_Chatbot'
 
 # Initialize LLM
 llm = ChatOpenAI(
@@ -20,11 +21,11 @@ llm = ChatOpenAI(
     max_tokens=500
 )
 
-# Define the state structure
+# Define the state 
 class State(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
 
-# Define the chatbot node
+# Define chatbot node
 def chatbot(state: State):
     """Main chatbot logic - processes messages and generates response"""
     response = llm.invoke(state["messages"])
@@ -40,7 +41,18 @@ graph_builder.add_node("chatbot", chatbot)
 graph_builder.add_edge(START, "chatbot")
 graph_builder.add_edge("chatbot", END)
 
+# Create the database
+connection = sqlite3.connect(database = 'chatbot.db', check_same_thread = False)# we want to use for multiple thread check_same_thread =False
 # Add memory to persist conversation
-memory = MemorySaver()
-graph = graph_builder.compile(checkpointer=memory)
+checkpointer = SqliteSaver(conn= connection)
+graph = graph_builder.compile(checkpointer = checkpointer)
 
+def retrieve_all_threads():
+    try:
+        all_thread = set()
+        for checkpoint in checkpointer.list(None):
+            if 'configurable' in checkpoint.config and 'thread_id' in checkpoint.config['configurable']:
+                all_thread.add(checkpoint.config['configurable']['thread_id'])
+        return list(all_thread)
+    except:
+        return []  
